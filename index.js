@@ -7,6 +7,7 @@ import { validationResult } from "express-validator";
 import { registerValidation } from "./validations/auth.js";
 
 import UserModel from "./models/User.js";
+import checkAuth from "./utils/checkAuth.js";
 
 // подключение к базам данных
 mongoose
@@ -27,7 +28,63 @@ const app = express();
 // разобранные данные попадают в тело запроса (req.body)
 app.use(express.json());
 
-// POST запрос - создание ресурса
+// делаем авторизацию
+app.post("/auth/login", async (req, res) => {
+	try {
+		// ищем пользователя по email
+		const user = await UserModel.findOne({ email: req.body.email });
+
+		// если его нет
+		if (!user) {
+			return res.status(404).json({
+				// при полноценном приложении надо максимально поверхностно объяснить причину ошибки
+				message: "Пользователь не найден",
+			});
+		}
+
+		// если он нашелся проверить сходятся ли пароли
+		const isValudPass = await bcrypt.compare(
+			req.body.password,
+			user._doc.passwordHash
+		);
+
+		// если не сходятся
+		if (!isValudPass) {
+			return res.status(400).json({
+				message: "Неверный логин или пароль",
+			});
+		}
+
+		// если юзер нашелся и пароль корректный -
+		// создаем новый токен
+		const token = jwt.sign(
+			{
+				_id: user._id, // id
+			},
+			"secret123", // ключ, по которому расшифруется токен
+			{
+				expiresIn: "30d", // время жизни токена
+			}
+		);
+
+		// вытаскиваем passwordHash
+		const { passwordHash, ...userData } = user._doc;
+
+		// сохраняем все в res
+		res.json({
+			...userData,
+			token,
+		});
+	} catch (err) {
+		// перехватываем ошибки
+		console.log(err);
+		res.status(500).json({
+			massage: "Не удалось авторизоваться",
+		});
+	}
+});
+
+// делаем регистрацию
 app.post("/auth/register", registerValidation, async (req, res) => {
 	try {
 		const errors = validationResult(req);
@@ -38,14 +95,14 @@ app.post("/auth/register", registerValidation, async (req, res) => {
 		// шифруем пароль
 		const password = req.body.password;
 		const salt = await bcrypt.genSalt(10);
-		const passwordHash = await bcrypt.hash(password, salt);
+		const hash = await bcrypt.hash(password, salt);
 
 		// создаем юзера
 		const doc = new UserModel({
 			email: req.body.email,
 			fullName: req.body.fullName,
 			avatarUrl: req.body.avatarUrl,
-			passwordHash,
+			passwordHash: hash,
 		});
 
 		// сохраняем юзера
@@ -62,9 +119,12 @@ app.post("/auth/register", registerValidation, async (req, res) => {
 			}
 		);
 
+		// вытаскиваем passwordHash
+		const { passwordHash, ...userData } = user._doc;
+
 		// сохраняем все в res
 		res.json({
-			...user,
+			...userData,
 			token,
 		});
 	} catch (err) {
@@ -72,6 +132,32 @@ app.post("/auth/register", registerValidation, async (req, res) => {
 		console.log(err);
 		res.status(500).json({
 			massage: "Не удалось зарегистрироваться",
+		});
+	}
+});
+
+// получаем инфу о пользователе
+app.get("/auth/me", checkAuth, async (req, res) => {
+	try {
+		// найти пользователя по id
+		const user = await UserModel.findById(req.userId);
+
+		if (!user) {
+			// если пользователя нет
+			return res.status(404).json({
+				message: "Пользователь не найден",
+			});
+		}
+
+		// если пользователь нашелся
+		const { passwordHash, ...userData } = user._doc;
+
+		// сохраняем все в res
+		res.json(userData);
+	} catch (err) {
+		console.log(err);
+		res.status(500).json({
+			massage: "Нет доступа",
 		});
 	}
 });
