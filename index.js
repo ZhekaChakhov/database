@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 
 import mongoose from "mongoose";
 
@@ -26,6 +27,8 @@ const app = express();
 // разбираем входящие запросы в объект в формате JSON
 // разобранные данные попадают в тело запроса (req.body)
 app.use(express.json());
+//разрешаем сторонним доменам делать запрос в наш локалхост
+app.use(cors());
 
 app.post("/auth/login", UserController.login);
 
