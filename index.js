@@ -12,7 +12,7 @@ import * as UserController from "./controllers/UserController.js";
 // подключение к базам данных
 mongoose
 	.connect(
-		"mongodb+srv://admin:wwwwww@mycluster.8pnhwo3.mongodb.net/blog?retryWrites=true&w=majority&appName=AtlasApp"
+		"mongodb+srv://admin:wwwwww@mycluster.8pnhwo3.mongodb.net/site?retryWrites=true&w=majority&appName=AtlasApp"
 	)
 	.then(() => {
 		console.log("DB ok");
