@@ -14,6 +14,11 @@ export const registerValidation = [
 				/[0-9]/.test(value)
 			);
 		}),
+	body("passwordConfirmation", "Пароли не соответствуют").custom(
+		(value, { req }) => {
+			return value === req.body.password;
+		}
+	),
 	body("fullName", "Укажите имя").isLength({ min: 3 }),
 	body("avatarUrl", "Неверная ссылка на аватарку").optional().isURL(),
 ];
