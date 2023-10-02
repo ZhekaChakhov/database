@@ -3,7 +3,11 @@ import mongoose from "mongoose";
 // создаем модель юзера
 const UserSchema = new mongoose.Schema(
 	{
-		fullName: {
+		name: {
+			type: String,
+			required: true,
+		},
+		lastName: {
 			type: String,
 			required: true,
 		},
@@ -16,7 +20,14 @@ const UserSchema = new mongoose.Schema(
 			type: String,
 			required: true,
 		},
-		avatarUrl: String,
+		passwordConfirmation: {
+			type: String,
+			required: true,
+		},
+		age: String,
+		sex: String,
+		country: String,
+		phoneNumber: String,
 	},
 	{
 		timestamps: true,

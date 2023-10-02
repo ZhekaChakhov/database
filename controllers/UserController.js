@@ -13,7 +13,7 @@ export const login = async (req, res) => {
 		if (!user) {
 			return res.status(404).json({
 				// при полноценном приложении надо максимально поверхностно объяснить причину ошибки
-				message: "Пользователь не найден",
+				message: "The user was not found",
 			});
 		}
 
@@ -26,7 +26,7 @@ export const login = async (req, res) => {
 		// если не сходятся
 		if (!isValudPass) {
 			return res.status(400).json({
-				message: "Неверный логин или пароль",
+				message: "Invalid username or password",
 			});
 		}
 
@@ -54,7 +54,7 @@ export const login = async (req, res) => {
 		// перехватываем ошибки
 		console.log(err);
 		res.status(500).json({
-			massage: "Не удалось авторизоваться",
+			massage: "Failed to log in",
 		});
 	}
 };
@@ -72,11 +72,23 @@ export const register = async (req, res) => {
 		const salt = await bcrypt.genSalt(10);
 		const hash = await bcrypt.hash(password, salt);
 
+		if (password !== req.body.passwordConfirmation) {
+			return res.status(402).json({
+				massage: "Passwords don't match",
+			});
+		}
+
 		// создаем юзера
 		const doc = new UserModel({
 			email: req.body.email,
-			fullName: req.body.fullName,
+			name: req.body.name,
+			lastName: req.body.lastName,
 			passwordHash: hash,
+			passwordConfirmation: hash,
+			age: req.body.age,
+			sex: req.body.sex,
+			country: req.body.country,
+			phoneNumber: req.body.phoneNumber,
 		});
 
 		// сохраняем юзера
@@ -105,7 +117,7 @@ export const register = async (req, res) => {
 		// перехватываем ошибки
 		console.log(err);
 		res.status(500).json({
-			massage: "Не удалось зарегистрироваться",
+			massage: "Failed to register",
 		});
 	}
 };
@@ -119,7 +131,7 @@ export const getMe = async (req, res) => {
 		if (!user) {
 			// если пользователя нет
 			return res.status(404).json({
-				message: "Пользователь не найден",
+				message: "User was not found",
 			});
 		}
 
@@ -131,7 +143,7 @@ export const getMe = async (req, res) => {
 	} catch (err) {
 		console.log(err);
 		res.status(500).json({
-			massage: "Нет доступа",
+			massage: "No access",
 		});
 	}
 };

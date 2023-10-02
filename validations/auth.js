@@ -14,11 +14,17 @@ export const registerValidation = [
 				/[0-9]/.test(value)
 			);
 		}),
-	body("passwordConfirmation", "Пароли не соответствуют").custom(
-		(value, { req }) => {
-			return value === req.body.password;
-		}
-	),
-	body("fullName", "Укажите имя").isLength({ min: 3 }),
-	body("avatarUrl", "Неверная ссылка на аватарку").optional().isURL(),
+	body("passwordConfirmation", "Пароли не соответствуют").isLength({ min: 8 }),
+	body("name", "Укажите имя").isLength({ min: 1 }),
+	body("lastName", "Укажите имя").isLength({ min: 1 }),
+	body("age", "Неверный формат возраста")
+		.optional({ checkFalsy: true })
+		.isNumeric(),
+	body("sex", "Неверный формат пола").optional({ checkFalsy: true }),
+	body("country", "Неверный формат страны").optional({ checkFalsy: true }),
+	body("phoneNumber", "Неверный формат номера телефона")
+		.optional({
+			checkFalsy: true,
+		})
+		.isLength({ min: 10 }),
 ];
